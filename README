@@ -1,0 +1,64 @@
+FreiLectrum - lightweight FreiCoin client
+
+Licence: GNU GPL v3
+Authors: Joseph White (FreiLectrum and droid) Thomas Voegtlin(electrum)
+Language: Python
+Homepage: http://frei.co.in
+
+
+0. FreiLectrum-android PRE-ALPHA v0.001pa INFO
+------------------------
+
+FreiLectrum pre-alpha v0.001 should work for everything but sending coins! 
+However BACK UP YOUR CURRENT FREILECTRUM WALLET!
+
+There has been testing of the android wallet, however it should work. again BACK UP YOUR CURRENT ELECTRUM CLIENT AND WALLET
+
+BLOCK EXPLORERS HAVE NOT YET BEEN CHANGED. ANYONE WANTING THIER EXPLORER IN FreiLectrum PLEASE OPEN AN ISSUE ON THIS GITHUB
+
+1. GETTING STARTED
+------------------
+
+To run FreiLectrum from source follow below
+  
+Here is code with everything but sends and no easy install.
+QR codes may not work for some. New version hd wallets (non-bip32 wallets) will not be restorable on the android version!
+Non-BIP32 HD wallets are a 2.0.0 release target (it is not possible in the electrum master branch mobile wallet! your BIP32 wallets ARE RESTORABLE RIGHT NOW.
+wallets are created from seed and brain wallet seeds on mobile can be restored on FreiLectrum right now, but not all freilectrum desktop seeds can be restored on mobile
+
+
+wallets are stored in /freilectrum/default_wallet BACK THIS UP! WRITE DOWN YOUR BRAIN WALLET TOO!
+
+
+Install scripting layer for android sl4a_r6x (ALWAYS USE THIS VERSION OR YOU WONT BE ABLE TO GET IT TO WORK!!!) on your droid
+
+http://chart.apis.google.com/chart?cht=qr&chs=150x150&chld=L&choe=UTF-8&chl=http%3A%2F%2Fwww.mithril.com.au%2Fandroid%2Fsl4a_r5x.apk
+
+Install python2.6 for android (on your droid)
+http://code.google.com/p/python-for-android/downloads/detail?name=PythonForAndroid_r5.apk
+
+(x86 version to be built later, there is currently NO KNOWN x86 release of Py4A and would only be used on laptops with x86)
+
+
+
+download the zipped version of this git project on your droid
+--link here--
+
+unzip with your favorite unzipper to /sl4a/Scripts/freilectrum
+
+
+RUN
+===
+open up sl4a, browse to Scripts/freilectrum and single click f4a.py and start it (first button on left, looks like a terminal)
+
+start up and get everythign done.
+
+**YOU MAY CRASH IF YOU DO NOT WAIT A FEW MOMENTS BEFORE STARTING, THIS IS DUE TO YOUR PHONE'S MEMORY AND CPU LIMITS**
+
+
+ENJOY
+recieve coins, and play with it, try to break it. this is a nightly with sending removed for coin safety.
+
+notes: "other" means pending/incoming-demurrage
+
+MAKE SURE YOU CHANGE YOUR SERVER TO 173.255.235.7 with TCP ***NOT SSL***
