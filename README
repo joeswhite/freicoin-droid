@@ -30,7 +30,7 @@ wallets are created from seed and brain wallet seeds on mobile can be restored o
 wallets are stored in /freilectrum/default_wallet BACK THIS UP! WRITE DOWN YOUR BRAIN WALLET TOO!
 
 
-Install scripting layer for android sl4a_r6x (ALWAYS USE THIS VERSION OR YOU WONT BE ABLE TO GET IT TO WORK!!!) on your droid
+Install scripting layer for android sl4a_r5x (ALWAYS USE THIS VERSION OR YOU WONT BE ABLE TO GET IT TO WORK!!!) on your droid
 
 http://chart.apis.google.com/chart?cht=qr&chs=150x150&chld=L&choe=UTF-8&chl=http%3A%2F%2Fwww.mithril.com.au%2Fandroid%2Fsl4a_r5x.apk
 
