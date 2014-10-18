@@ -39,6 +39,9 @@ from plugins import run_hook
 
 #added for deserialization
 from old_transaction import OldTransaction
+from account import OldAccount
+
+from pprint import pprint
 
 COINBASE_MATURITY = 100
 DUST_THRESHOLD = 5430
@@ -655,7 +658,10 @@ class NewWallet:
                 addresses = self.accounts[account].get_addresses(for_change)
                 for addr in addresses:
                     if address == addr:
-                        return account, (for_change, addresses.index(addr))
+                        print( addresses )
+                        print(' ----*+*+*-*-*--*-*------ ')
+                        pprint(for_change)
+                        return account, (for_change, address.index(addr))
 
         for k,v in self.next_addresses.items():
             if v == address:
@@ -1369,40 +1375,203 @@ class NewWallet:
         return default_label
 
 
-    def make_unsigned_transaction(self, outputs, fee=None, change_addr=None, domain=None ):
-        for address, x in outputs:
-            assert is_valid(address), "Address " + address + " is invalid!"
-        amount = sum( map(lambda x:x[1], outputs) )
-        inputs, total, fee = self.choose_tx_inputs( amount, fee, len(outputs), domain )
-        if not inputs:
-            raise ValueError("Not enough funds")
-        self.add_input_info(inputs)
-        outputs = self.add_tx_change(inputs, outputs, amount, fee, total, change_addr)
-        return OldTransaction.from_io(inputs, outputs)
+
+    @classmethod
+    def is_address(self, text):
+        if not text:
+            return False
+        for x in text.split():
+            if not bitcoin.is_address(x):
+                return False
+        return True
+        
+        
+    def make_unsigned_transaction(self, outputs, fixed_fee=None, change_addr=None, domain=None, coins=None ):
+        # check outputs
+        #[(outputType, recipient, amount)]
+        print(outputs)
+        for type, data, value in outputs:
+            if type == 'op_return':
+                assert len(data) < 41, "string too long"
+                #assert value == 0
+            if type == 'address':
+                assert is_address(data), "Address " + data + " is invalid!"
+        # get coins
+        if not coins:
+            if domain is None:
+                domain = self.addresses(True)
+            for i in self.frozen_addresses:
+                if i in domain: domain.remove(i)
+            coins = self.get_unspent_coins(domain)
+
+        amount = sum( map(lambda x:x[2], outputs) )
+        total = fee = 0
+        inputs = []
+        tx = Transaction(inputs, outputs)
+        print(tx)
+        for item in coins:
+            if item.get('coinbase') and item.get('height') + COINBASE_MATURITY > self.network.get_local_height():
+                continue
+            v = item.get('value')
+            total += v
+            pprint(item)
+            print('||||||||||||||||||||')
+            self.add_input_info(item)
+            print('--------debug unsigtx********')
+            tx.add_input(item)
+            fee = fixed_fee if fixed_fee is not None else self.estimated_fee(tx)
+            if total >= amount + fee: break
+        else:
+            print_error("Not enough funds", total, amount, fee)
+            return None
+
+        # change address
+        if not change_addr:
+            # send change to one of the accounts involved in the tx
+            address = inputs[0].get('address')
+            account, _ = self.get_address_index(address)
+#            if not self.use_change or account == IMPORTED_ACCOUNT:
+
+
+            if not self.use_change:
+                change_addr = address
+            else:
+                change_addr = self.accounts[account].get_addresses(1)[-self.gap_limit_for_change]
+
+        # if change is above dust threshold, add a change output.
+        change_amount = total - ( amount + fee )
+        if fixed_fee is not None and change_amount > 0:
+            # Insert the change output at a random position in the outputs
+            posn = random.randint(0, len(tx.outputs))
+            tx.outputs[posn:posn] = [( 'address', change_addr,  change_amount)]
+        elif change_amount > DUST_THRESHOLD:
+            # Insert the change output at a random position in the outputs
+            posn = random.randint(0, len(tx.outputs))
+            tx.outputs[posn:posn] = [( 'address', change_addr,  change_amount)]
+            # recompute fee including change output
+            fee = self.estimated_fee(tx)
+            # remove change output
+            tx.outputs.pop(posn)
+            # if change is still above dust threshold, re-add change output.
+            change_amount = total - ( amount + fee )
+            if change_amount > DUST_THRESHOLD:
+                tx.outputs[posn:posn] = [( 'address', change_addr,  change_amount)]
+                print_error('change', change_amount)
+            else:
+                print_error('not keeping dust', change_amount)
+        else:
+            print_error('not keeping dust', change_amount)
+        pprint(tx)
+        run_hook('make_unsigned_transaction', tx)
+        return tx
+        
+        
+        
+        
+        
+        
+        
+        
+    # def make_unsigned_transaction(self, outputs, fee=None, change_addr=None, domain=None ):
+        # for address, x in outputs:
+            # assert is_valid(address), "Address " + address + " is invalid!"
+        # amount = sum( map(lambda x:x[1], outputs) )
+        # inputs, total, fee = self.choose_tx_inputs( amount, fee, len(outputs), domain )
+        # if not inputs:
+            # raise ValueError("Not enough funds")
+        # self.add_input_info(inputs)
+        # outputs = self.add_tx_change(inputs, outputs, amount, fee, total, change_addr)
+        # return OldTransaction.from_io(inputs, outputs)
 
 
     def mktx(self, outputs, password, fee=None, change_addr=None, domain= None ):
         tx = self.make_unsigned_transaction(outputs, fee, change_addr, domain)
         keypairs = {}
         self.add_keypairs_from_wallet(tx, keypairs, password)
+        print('debug-*-*-***-------*****-----')
         if keypairs:
             self.sign_transaction(tx, keypairs, password)
         return tx
 
 
     def add_input_info(self, inputs):
-        for txin in inputs:
-            address = txin['address']
-            if address in self.imported_keys.keys():
-                continue
-            account, sequence = self.get_address_index(address)
-            txin['KeyID'] = self.get_keyID(account, sequence)
-            redeemScript = self.accounts[account].redeem_script(sequence)
-            if redeemScript: 
-                txin['redeemScript'] = redeemScript
-            else:
-                txin['redeemPubkey'] = self.accounts[account].get_pubkey(*sequence)
+# #        print('***************')
+        txin = inputs
 
+        address = txin['address']
+        account_id, sequence = self.get_address_index(address)
+        account = self.accounts[account_id]
+#        if address in self.imported_keys.keys():continue
+
+
+# #        redeemScript = account.redeem_script(*sequence)
+
+
+# #        pprint(txin)
+
+
+        txin['KeyID'] = self.get_keyID(account_id, sequence)
+        redeemScript = self.accounts[account_id].redeem_script(*sequence)
+# #        print('+**+*++*+*+*+*+')
+        if redeemScript: 
+            txin['redeemScript'] = redeemScript
+            txin['num_sig'] = 2
+        else:
+            txin['redeemPubkey'] = self.accounts[account_id].get_pubkey(*sequence)
+            txin['num_sig'] = 1
+
+#        pubkeys = self.accounts[account_id].get_pubkey(*sequence)
+
+        pubkeys = account.get_pubkeys(*sequence)
+        x_pubkeys = account.get_xpubkeys(*sequence)
+
+        # sort pubkeys and x_pubkeys, using the order of pubkeys
+#        pubkeys, x_pubkeys = zip( *sorted(zip(pubkeys, x_pubkeys)))
+
+        txin['pubkeys'] = list(pubkeys)
+        txin['x_pubkeys'] = list(x_pubkeys)
+
+        txin['signatures'] = [None] * len(pubkeys)
+#        txin['signatures'] = [None]
+
+
+
+        print('+++**********+++')
+        print(txin)
+
+
+#    def add_input_info(self, txin):
+#        print('debug aii 1')
+#        address = txin['address']
+#        account_id, sequence = self.get_address_index(address)
+#        account = self.accounts[account_id]
+
+#        print(txin)
+#        print(sequence)
+#        print('sdlfjhasnvlriuoaw52534532453')
+#        pprint(sequence)
+#        pubkeys = account.get_pubkeys(*sequence)
+#        print('debug aii 4')
+#        x_pubkeys = account.get_xpubkeys(*sequence)
+#        print('debug aii 5')
+        # sort pubkeys and x_pubkeys, using the order of pubkeys
+#        pubkeys, x_pubkeys = zip( *sorted(zip(pubkeys, x_pubkeys)))
+#        txin['pubkeys'] = list(pubkeys)
+#        txin['x_pubkeys'] = list(x_pubkeys)
+#        txin['signatures'] = [None] * len(pubkeys)
+
+#        print('debug aii 5')
+
+
+#        redeemScript = account.redeem_script(*sequence)
+
+#        if redeemScript:
+#            txin['redeemScript'] = redeemScript
+#            txin['num_sig'] = 2
+#        else:
+#            txin['redeemPubkey'] = account.get_pubkey(*sequence)
+#            txin['num_sig'] = 1     
+                
 
     def sign_transaction(self, tx, keypairs, password):
         tx.sign(keypairs)

@@ -346,16 +346,15 @@ def get_history_values(n):
             else:
                 time_str = str( dt.date() )
         except Exception:
-            time_str = 'pending'
+            time_str = 'other'
 
         conf_str = 'v' if conf else 'o'
         label, is_default_label = wallet.get_label(tx_hash)
-        #replace < and >
-#        labelNoSpecial = re.sub("[!@#$%^&*()[]{};:,./<>?\|`~-=_+]", " ", label)
+        #replace < and > for ease of android parsing
         labelNoSpecial = label[1:]
 #        values.append((conf_str, '  ' + time_str, '  ' + format_satoshis(value,True), '  ' + label ))
         values.append((conf_str, '  ' + time_str, '  ' + format_satoshis(value,True), '  ' + labelNoSpecial ))
-#    print(values)
+    print(values)
     return values
 
 
@@ -461,9 +460,11 @@ def pay_to(recipient, amount, fee, label):
     droid.dialogShow()
 
     try:
-        tx = wallet.mktx( [(recipient, amount)], password, fee)
+        #updates for freicoin transaction creation
+        outputType = 'address'
+        tx = wallet.mktx([(outputType, recipient, amount)], password, fee)
     except Exception as e:
-        modal_dialog('error', e.message)
+        modal_dialog('error', str(e.message))
         droid.dialogDismiss()
         return
 
@@ -594,16 +595,20 @@ def payto_loop():
             if id=="buttonPay":
 
                 droid.fullQuery()
-                recipient = droid.fullQueryDetail("recipient").result.get('text')
-                label  = droid.fullQueryDetail("label").result.get('text')
+                recipient = str(droid.fullQueryDetail('recipient').result.get('text'))
+                label  = droid.fullQueryDetail('label').result.get('text')
                 amount = droid.fullQueryDetail('amount').result.get('text')
-
+               
+                
+                
                 if not is_valid(recipient):
-                    modal_dialog('Error','Invalid Bitcoin address')
+                    modal_dialog('Error','Invalid FreiCoin address')
                     continue
 
                 try:
                     amount = int( 100000000 * Decimal(amount) )
+                    
+                    
                 except Exception:
                     modal_dialog('Error','Invalid amount')
                     continue
@@ -641,6 +646,7 @@ def payto_loop():
         #elif event["name"]=="screen":
         #    if event["data"]=="destroy":
         #        out = 'main'
+
 
     return out
 

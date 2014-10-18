@@ -33,6 +33,8 @@ import math
 #import network for height
 import network
 
+from pprint import pprint
+
 #
 # Workalike python implementation of Bitcoin's CDataStream class.
 #
@@ -611,7 +613,8 @@ class Transaction:
             script += '87'                                       # op_equal
         else:
             raise
-	#print(script)
+        print('-----+++++-----*****-----+++++****-*')
+        pprint(script)
         return script
 
 
@@ -624,13 +627,13 @@ class Transaction:
         inputs = self.inputs
 
 	#debug
-#	print(inputs)
+	print(inputs)
 
         outputs = self.outputs
 
 
 	#debug
-#	print(outputs)
+	print(outputs)
 
 	#freicoin has version 2 txn
         s  = int_to_hex(2,4)                                         # version
@@ -818,10 +821,16 @@ class Transaction:
         print_error("tx.sign(), keypairs:", keypairs)
 
         for i, txin in enumerate(self.inputs):
+            pprint(txin)
 
             # continue if this txin is complete
             signatures = filter(lambda x: x is not None, txin['signatures'])
+
+            print('&&**&&&&&&&&&&&&&')
             num = txin['num_sig']
+
+            pprint(signatures)
+            pprint(txin)
             if len(signatures) == num:
                 continue
 

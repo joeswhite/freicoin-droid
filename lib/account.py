@@ -20,37 +20,124 @@
 from bitcoin import *
 from transaction import Transaction
 
+# class Account(object):
+    # def __init__(self, v):
+        # self.addresses = v.get('0', [])
+        # self.change = v.get('1', [])
+
+    # def dump(self):
+        # return {'0':self.addresses, '1':self.change}
+
+    # def get_addresses(self, for_change):
+        # return self.change[:] if for_change else self.addresses[:]
+
+    # def create_new_address(self, for_change):
+        # addresses = self.change if for_change else self.addresses
+        # n = len(addresses)
+        # address = self.get_address( for_change, n)
+        # addresses.append(address)
+        # print address
+        # return address
+
+    # def get_address(self, for_change, n):
+        # pass
+        
+    # def get_pubkeys(self, sequence):
+        # return [ self.get_pubkey( *sequence )]
+
+        
+        
 class Account(object):
     def __init__(self, v):
-        self.addresses = v.get('0', [])
-        self.change = v.get('1', [])
+
+        self.addresses = v.get(0, [])
+        self.change = v.get(1, [])
+        self.mpk = v['mpk'].decode('hex')
+
+        self.receiving_pubkeys   = v.get('receiving', [])
+        self.change_pubkeys      = v.get('change', [])
+        # addresses will not be stored on disk
+        self.receiving_addresses = map(self.pubkeys_to_address, self.receiving_pubkeys)
+        self.change_addresses    = map(self.pubkeys_to_address, self.change_pubkeys)
 
     def dump(self):
-        return {'0':self.addresses, '1':self.change}
+        return {'receiving':self.receiving_pubkeys, 'change':self.change_pubkeys}
 
-    def get_addresses(self, for_change):
-        return self.change[:] if for_change else self.addresses[:]
-
-    def create_new_address(self, for_change):
-        addresses = self.change if for_change else self.addresses
-        n = len(addresses)
-        address = self.get_address( for_change, n)
-        addresses.append(address)
-        print address
-        return address
+    def get_pubkey(self, for_change, n):
+        pubkeys_list = self.change_pubkeys if for_change else self.receiving_pubkeys
+        return pubkeys_list[n]
 
     def get_address(self, for_change, n):
-        pass
-        
-    def get_pubkeys(self, sequence):
-        return [ self.get_pubkey( *sequence )]
+        addr_list = self.change_addresses if for_change else self.receiving_addresses
+        return addr_list[n]
 
+    def get_pubkeys(self, for_change, n):
+        return [ self.get_pubkey(for_change, n)]
+
+    def get_addresses(self, for_change):
+        addr_list = self.change_addresses if for_change else self.receiving_addresses
+        return addr_list[:]
+
+    def derive_pubkeys(self, for_change, n):
+        pass
+
+    def create_new_address(self, for_change):
+        pubkeys_list = self.change_pubkeys if for_change else self.receiving_pubkeys
+        addr_list = self.change_addresses if for_change else self.receiving_addresses
+        n = len(pubkeys_list)
+        pubkeys = self.derive_pubkeys(for_change, n)
+        address = self.pubkeys_to_address(pubkeys)
+        pubkeys_list.append(pubkeys)
+        addr_list.append(address)
+        print_msg(address)
+        return address
+
+    def pubkeys_to_address(self, pubkey):
+        return public_key_to_bc_address(pubkey.decode('hex'))
+
+    def has_change(self):
+        return True
+
+    def get_name(self, k):
+        return _('Main account')
+
+    def redeem_script(self, for_change, n):
+        return None
+
+    def synchronize_sequence(self, wallet, for_change):
+        limit = self.gap_limit_for_change if for_change else self.gap_limit
+        while True:
+            addresses = self.get_addresses(for_change)
+            if len(addresses) < limit:
+                address = self.create_new_address(for_change)
+                wallet.add_address(address)
+                continue
+            if map( lambda a: wallet.address_is_old(a), addresses[-limit:] ) == limit*[False]:
+                break
+            else:
+                address = self.create_new_address(for_change)
+                wallet.add_address(address)
+
+    def synchronize(self, wallet):
+        self.synchronize_sequence(wallet, False)
+        self.synchronize_sequence(wallet, True)
+
+
+        
 
 
 class OldAccount(Account):
     """  Privatekey(type,n) = Master_private_key + H(n|S|type)  """
 
     def __init__(self, v):
+
+
+        self.receiving_pubkeys   = v.get('receiving', [])
+        self.change_pubkeys      = v.get('change', [])
+        # addresses will not be stored on disk
+        self.receiving_addresses = map(self.pubkeys_to_address, self.receiving_pubkeys)
+        self.change_addresses    = map(self.pubkeys_to_address, self.change_pubkeys)
+
         self.addresses = v.get(0, [])
         self.change = v.get(1, [])
         self.mpk = v['mpk'].decode('hex')
@@ -90,6 +177,13 @@ class OldAccount(Account):
         public_key2 = ecdsa.VerifyingKey.from_public_point( pubkey_point, curve = SECP256k1 )
         return '04' + public_key2.to_string().encode('hex')
 
+
+
+    def get_xpubkeys(self, for_change, n):
+        return self.get_pubkeys (for_change, n)
+
+
+
     def get_private_key_from_stretched_exponent(self, for_change, n, secexp):
         order = generator_secp256k1.order()
         secexp = ( secexp + self.get_sequence(for_change, n) ) % order
@@ -112,8 +206,11 @@ class OldAccount(Account):
             raise Exception('Invalid password')
         return True
 
-    def redeem_script(self, sequence):
+    def redeem_script(self, for_change, n):
         return None
+
+    def get_addresses ( self, for_change):
+        return self.change [:] if for_change else self.addresses[:]
 
 
 class BIP32_Account(Account):
@@ -184,8 +281,9 @@ class BIP32_Account_2of2(BIP32_Account):
         address = hash_160_to_bc_address(hash_160(self.redeem_script((for_change, n)).decode('hex')), 5)
         return address
 
-    def get_pubkeys(self, sequence):
-        return [ self.get_pubkey( *sequence ), self.get_pubkey2( *sequence )]
+    def get_pubkeys(self, for_change, n):
+         return self.get_pubkey(for_change, n)
+#        return [ self.get_pubkey( *sequence ), self.get_pubkey2( *sequence )]
 
 class BIP32_Account_2of3(BIP32_Account_2of2):
 
