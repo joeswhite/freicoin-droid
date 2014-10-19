@@ -613,8 +613,8 @@ class Transaction:
             script += '87'                                       # op_equal
         else:
             raise
-        print('-----+++++-----*****-----+++++****-*')
-        pprint(script)
+        #print('-----+++++-----*****-----+++++****-*')
+        #pprint(script)
         return script
 
 
@@ -627,13 +627,13 @@ class Transaction:
         inputs = self.inputs
 
 	#debug
-	print(inputs)
+	#print(inputs)
 
         outputs = self.outputs
 
 
 	#debug
-	print(outputs)
+	#print(outputs)
 
 	#freicoin has version 2 txn
         s  = int_to_hex(2,4)                                         # version
@@ -738,7 +738,7 @@ class Transaction:
         if for_sig is not None and for_sig != -1:
             s += int_to_hex(1, 4)                                   #  hash type
 
-	print(s)
+	#print(s)
         return s
 
     def tx_for_sig(self,i):

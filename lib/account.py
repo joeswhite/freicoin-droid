@@ -19,6 +19,7 @@
 
 from bitcoin import *
 from transaction import Transaction
+from pprint import pprint
 
 # class Account(object):
     # def __init__(self, v):
@@ -74,23 +75,43 @@ class Account(object):
     def get_pubkeys(self, for_change, n):
         return [ self.get_pubkey(for_change, n)]
 
-    def get_addresses(self, for_change):
-        addr_list = self.change_addresses if for_change else self.receiving_addresses
-        return addr_list[:]
+#    def get_addresses(self, for_change):
+#        addr_list = self.change_addresses if for_change else self.receiving_addresses
+#        return addr_list[:]
 
     def derive_pubkeys(self, for_change, n):
         pass
 
+#    def create_new_address(self, for_change):
+#        pubkeys_list = self.change_pubkeys if for_change else self.receiving_pubkeys
+#        addr_list = self.change_addresses if for_change else self.receiving_addresses
+#        n = len(pubkeys_list)
+#        pprint(for_change)
+#        pubkeys = self.derive_pubkeys(for_change, n)
+#        address = self.pubkeys_to_address(pubkeys)
+#        pubkeys_list.append(pubkeys)
+#        addr_list.append(address)
+#        print_msg(address)
+#        return address
+
+
+
+
+
     def create_new_address(self, for_change):
-        pubkeys_list = self.change_pubkeys if for_change else self.receiving_pubkeys
-        addr_list = self.change_addresses if for_change else self.receiving_addresses
-        n = len(pubkeys_list)
-        pubkeys = self.derive_pubkeys(for_change, n)
-        address = self.pubkeys_to_address(pubkeys)
-        pubkeys_list.append(pubkeys)
-        addr_list.append(address)
-        print_msg(address)
+        addresses = self.change if for_change else self.addresses
+        n = len(addresses)
+        address = self.get_address( for_change, n)
+        addresses.append(address)
+        print address
         return address
+
+    def get_address(self, for_change, n):
+        pass
+
+
+
+
 
     def pubkeys_to_address(self, pubkey):
         return public_key_to_bc_address(pubkey.decode('hex'))

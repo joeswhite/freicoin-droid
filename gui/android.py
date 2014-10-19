@@ -22,7 +22,7 @@
 from __future__ import absolute_import
 import android
 
-from electrum import SimpleConfig, Wallet, WalletStorage, format_satoshis, mnemonic_encode, mnemonic_decode
+from electrum import SimpleConfig, Wallet, WalletStorage, format_satoshis, mnemonic_encode, mnemonic_decode, VeryOldWallet
 from electrum.bitcoin import is_valid
 from electrum import util
 from decimal import Decimal
@@ -354,7 +354,7 @@ def get_history_values(n):
         labelNoSpecial = label[1:]
 #        values.append((conf_str, '  ' + time_str, '  ' + format_satoshis(value,True), '  ' + label ))
         values.append((conf_str, '  ' + time_str, '  ' + format_satoshis(value,True), '  ' + labelNoSpecial ))
-    print(values)
+    #print(values)
     return values
 
 
@@ -492,7 +492,7 @@ def make_new_contact():
     if r:
         data = r['extras']['SCAN_RESULT']
         if data:
-            if re.match('^bitcoin:', data):
+            if re.match('^freicoin:', data):
                 address, _, _, _, _, _, _ = util.parse_url(data)
             elif is_valid(data):
                 address = data
@@ -566,7 +566,7 @@ def main_loop():
                 if receive_addr:
                     amount = modal_input('Amount', 'Amount you want receive. ', '', "numberDecimal")
                     if amount:
-                        receive_addr = 'bitcoin:%s?amount=%s'%(receive_addr, amount)
+                        receive_addr = 'freicoin:%s?amount=%s'%(receive_addr, amount)
 
                 if not receive_addr:
                     out = None
@@ -627,7 +627,7 @@ def payto_loop():
                 if r:
                     data = r['extras']['SCAN_RESULT']
                     if data:
-                        if re.match('^bitcoin:', data):
+                        if re.match('^freicoin:', data):
                             payto, amount, label, _, _, _, _ = util.parse_url(data)
                             droid.fullSetProperty("recipient", "text",payto)
                             droid.fullSetProperty("amount", "text", amount)
@@ -766,6 +766,42 @@ def change_password_dialog():
     return True
 
 
+
+
+def new_wallet_password_dialog():
+    if oldwallet.use_encryption:
+        password  = droid.dialogGetPassword('Your wallet is encrypted').result
+        if password is None: return
+    else:
+        password = None
+
+    try:
+        oldwallet.get_seed(password)
+    except Exception:
+        modal_dialog('error','incorrect password')
+        return
+
+    new_password  = droid.dialogGetPassword('Choose a password').result
+    if new_password == None:
+        return
+
+    if new_password != '':
+        password2  = droid.dialogGetPassword('Confirm new password').result
+        if new_password != password2:
+            modal_dialog('error','passwords do not match')
+            return
+
+    oldwallet.update_password(password, new_password)
+    if new_password:
+        modal_dialog('Password updated','your wallet is encrypted')
+    else:
+        modal_dialog('No password','your wallet is not encrypted')
+    return True
+
+
+
+
+
 def settings_loop():
 
 
@@ -892,12 +928,13 @@ def make_bitmap(addr):
 droid = android.Android()
 menu_commands = ["send", "receive", "settings", "contacts", "main"]
 wallet = None
+oldwallet = None
 network = None
 
 class ElectrumGui:
 
     def __init__(self, config, _network):
-        global wallet, network
+        global wallet, network,oldwallet
         network = _network
         network.register_callback('updated', update_callback)
         network.register_callback('connected', update_callback)
@@ -910,18 +947,19 @@ class ElectrumGui:
             if not action: exit()
 
             wallet = Wallet(storage)
+            oldwallet = VeryOldWallet(storage)
             if action == 'create':
-                wallet.init_seed(None)
+                oldwallet.init_seed(None)
                 self.show_seed()
-                wallet.save_seed(None)
-                wallet.synchronize()  # generate first addresses offline
+                oldwallet.save_seed(None)
+                oldwallet.synchronize()  # generate first addresses offline
                 
             elif action == 'restore':
                 seed = self.seed_dialog()
                 if not seed:
                     exit()
-                wallet.init_seed(str(seed))
-                wallet.save_seed(None)
+                oldwallet.init_seed(str(seed))
+                oldwallet.save_seed(None)
             else:
                 exit()
 
@@ -931,10 +969,14 @@ class ElectrumGui:
                 if not self.restore_wallet():
                     exit()
 
-            self.password_dialog()
+            self.new_password_dialog()
 
         else:
             wallet = Wallet(storage)
+
+            oldwallet = VeryOldWallet(storage)
+
+
             wallet.start_threads(network)
 
 
@@ -1008,9 +1050,12 @@ class ElectrumGui:
 
         
     def show_seed(self):
-        modal_dialog('Your seed is:', wallet.seed)
-        modal_dialog('Mnemonic code:', ' '.join(mnemonic_encode(wallet.seed)) )
+        modal_dialog('Your seed is:', oldwallet.seed)
+        modal_dialog('Mnemonic code:', ' '.join(mnemonic_encode(oldwallet.seed)) )
 
+
+    def new_password_dialog(self):
+        new_wallet_password_dialog()
 
     def password_dialog(self):
         change_password_dialog()
