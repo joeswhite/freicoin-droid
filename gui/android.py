@@ -166,7 +166,7 @@ def make_layout(s, scrollable = False):
 
         <TextView
           android:id="@+id/textFreiLectrum"
-          android:text="FreiLectrum"
+          android:text="FreiLectrum RC1"
           android:textSize="7pt"
           android:textColor="#ff4444ff"
           android:gravity="left"
@@ -346,7 +346,7 @@ def get_history_values(n):
             else:
                 time_str = str( dt.date() )
         except Exception:
-            time_str = 'other'
+            time_str = 'pending'
 
         conf_str = 'v' if conf else 'o'
         label, is_default_label = wallet.get_label(tx_hash)
@@ -564,12 +564,11 @@ def main_loop():
             elif out == "receive":
                 global receive_addr
                 receive_addr = select_from_addresses()
-                if receive_addr:
+                #if receive_addr:
                 #will reenable in python 2.7
 #                    amount = modal_input('Amount', 'Amount you want receive. ', '', "numberDecimal")
 #                    if amount:
 #                        receive_addr = 'freicoin:%s?amount=%s'%(receive_addr, amount)
-
                 if not receive_addr:
                     out = None
 
