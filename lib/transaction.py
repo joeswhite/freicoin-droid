@@ -950,7 +950,7 @@ class Transaction:
 
 
     def as_dict(self):
-        import json
+        import simplejson as json
         out = {
             "hex":str(self),
             "complete":self.is_complete()

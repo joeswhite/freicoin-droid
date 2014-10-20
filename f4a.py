@@ -17,7 +17,7 @@
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 from decimal import Decimal
-import json
+import simplejson as json
 import optparse
 import os
 import re

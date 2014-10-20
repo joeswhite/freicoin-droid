@@ -18,7 +18,8 @@
 
 
 import random, ast, re, errno, os
-import threading, traceback, sys, time, json, Queue
+import threading, traceback, sys, time, Queue
+import simplejson as json
 import socks
 import socket
 import ssl
@@ -230,7 +231,8 @@ class Interface(threading.Thread):
 
 
     def send_http(self, messages, callback):
-        import urllib2, json, time, cookielib
+        import urllib2, time, cookielib
+        import simplejson as json
         print_error( "send_http", messages )
         
         if self.proxy:
