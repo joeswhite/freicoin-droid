@@ -724,7 +724,7 @@ class OldTransaction:
 
 
     def as_dict(self):
-        import json
+        import simplejson as json
         out = {
             "hex":self.raw,
             "complete":self.is_complete

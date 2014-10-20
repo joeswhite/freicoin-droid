@@ -1,4 +1,6 @@
-import os, sys, re, json
+#import os, sys, re, json
+import os, sys, re
+import simplejson as json
 import platform
 import shutil
 from datetime import datetime

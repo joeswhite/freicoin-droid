@@ -22,7 +22,7 @@ import sys
 import os
 import threading
 import traceback
-import json
+import simplejson as json
 import Queue
 from network import Network
 from util import print_msg

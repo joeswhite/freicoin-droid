@@ -78,7 +78,7 @@ try:
 except (ImportError, SyntaxError):
     # simplejson does not support Python 3.2, it thows a SyntaxError
     # because of u'...' Unicode literals.
-    import json
+    import simplejson as json
 
 # ---------
 # Specifics
