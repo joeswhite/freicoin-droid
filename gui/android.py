@@ -436,7 +436,7 @@ def update_layout():
 
     # vibrate if status changed
     if text != status_text:
-        if status_text and network.is_connected() and wallet.up_to_date:
+        #if status_text and network.is_connected() and wallet.up_to_date:
             #turn off vibrate
             #droid.vibrate()
         status_text = text
