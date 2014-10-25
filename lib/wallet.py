@@ -43,7 +43,7 @@ from account import OldAccount
 
 from pprint import pprint
 
-COINBASE_MATURITY = 100
+COINBASE_MATURITY = 120
 DUST_THRESHOLD = 5430
 
 # AES encryption
@@ -1216,7 +1216,12 @@ class NewWallet:
         inputs = []
 
         for item in coins:
-            if item.get('coinbase') and item.get('height') + COINBASE_MATURITY > self.network.get_local_height():
+            newHeight = 0
+            if self.network.get_local_height() > self.network.set_server_height():
+                newHeight = self.network.get_local_height()
+            else:
+                newHeight = self.network.get_server_height()
+            if item.get('coinbase') and item.get('height') + COINBASE_MATURITY > newHeight:
                 continue
             addr = item.get('address')
             v = item.get('value')
