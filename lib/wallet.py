@@ -1447,9 +1447,9 @@ class NewWallet:
             #more for freicoin
             if item.get('coinbase') and item.get('refheight') + COINBASE_MATURITY > newHeight:
                 continue
-            if item.get('height') > newHeight + 3:
+            if item.get('height') > self.newHeight + 3:
                 continue
-            if item.get('refheight') > newHeight + 3:
+            if item.get('refheight') > self.newHeight + 3:
                 continue   
             v = item.get('value')
             total += v
