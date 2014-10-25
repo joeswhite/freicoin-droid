@@ -1445,7 +1445,7 @@ class NewWallet:
             if item.get('coinbase') and item.get('height') + COINBASE_MATURITY > self.network.get_local_height():
                 continue
             #more for freicoin
-            if item.get('coinbase') and item.get('refheight') + COINBASE_MATURITY > newHeight:
+            if item.get('coinbase') and item.get('refheight') + COINBASE_MATURITY > self.newHeight:
                 continue
             if item.get('height') > self.newHeight + 3:
                 continue
