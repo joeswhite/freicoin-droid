@@ -1190,23 +1190,23 @@ class NewWallet:
 
         coins = self.get_unspent_coins(domain)
         inputs = []
-        newHeight = 0
+        self.newHeight = 0
 
 
         for item in coins:
-            newHeight = 0
+            self.newHeight = 0
             if self.network.get_local_height() > self.network.set_server_height():
-                newHeight = self.network.get_local_height()
+                self.newHeight = self.network.get_local_height()
             else:
-                newHeight = self.network.get_server_height()
-            if item.get('coinbase') and item.get('height') + COINBASE_MATURITY > newHeight:
+                self.newHeight = self.network.get_server_height()
+            if item.get('coinbase') and item.get('height') + COINBASE_MATURITY > self.newHeight:
                 continue
             #more for freicoin
-            if item.get('coinbase') and item.get('refheight') + COINBASE_MATURITY > newHeight:
+            if item.get('coinbase') and item.get('refheight') + COINBASE_MATURITY > self.newHeight:
                 continue
-            if item.get('height') > newHeight + 3:
+            if item.get('height') > self.newHeight + 3:
                 continue
-            if item.get('refheight') > newHeight + 3:
+            if item.get('refheight') > self.newHeight + 3:
                 continue                
             addr = item.get('address')
             v = item.get('value')
