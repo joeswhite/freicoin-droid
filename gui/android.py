@@ -465,7 +465,7 @@ def pay_to(recipient, amount, fee, label):
         tx = wallet.mktx([(outputType, recipient, amount)], password, fee)
     except Exception as e:
 #        modal_dialog('error', str(e.message + '-Did you too many coins?'))
-        modal_dialog('error', 'Do you have enough coins? Are your coins confirmed?')
+        modal_dialog('error', str(e.message) + 'Do you have enough coins? Are your coins confirmed?')
         droid.dialogDismiss()
         return
 
