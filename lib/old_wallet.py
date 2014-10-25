@@ -1199,6 +1199,13 @@ class NewWallet:
                 newHeight = self.network.get_server_height()
             if item.get('coinbase') and item.get('height') + COINBASE_MATURITY > newHeight:
                 continue
+            #more for freicoin
+            if item.get('coinbase') and item.get('refheight') + COINBASE_MATURITY > newHeight:
+                continue
+            if item.get('height') > newHeight + 3:
+                continue
+            if item.get('refheight') > newHeight + 3:
+                continue                
             addr = item.get('address')
             v = item.get('value')
             total += v
