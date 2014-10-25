@@ -1814,6 +1814,9 @@ class WalletSynchronizer(threading.Thread):
 
 class OldWallet(NewWallet):
 
+    def __init__(self)
+        self.newHeight = 0
+
     def init_seed(self, seed):
         import mnemonic
         
