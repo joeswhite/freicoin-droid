@@ -8,7 +8,7 @@ DEFAULT_PORTS = {'t':'50011', 's':'50012', 'h':'9009', 'g':'9010'}
 
 DEFAULT_SERVERS = {
         '173.255.235.7':DEFAULT_PORTS,
-	'freicoin.us':DEFAULT_PORTS,
+	'www.freicoin.us':DEFAULT_PORTS,
 
 }
 
