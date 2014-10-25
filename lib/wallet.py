@@ -2007,8 +2007,9 @@ class WalletSynchronizer(threading.Thread):
 
 class OldWallet(NewWallet):
 	
-    def __init__():
+    def __init__(self, storage):
         self.newHeight = 0
+        self.storage = storage
 
     def init_seed(self, seed):
         import mnemonic
