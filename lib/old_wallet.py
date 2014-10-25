@@ -1178,7 +1178,7 @@ class NewWallet:
         return [x[1] for x in coins]		
 
 
-    def choose_tx_inputs( self, amount, fixed_fee, num_outputs, domain = None, newHeight = None ):
+    def choose_tx_inputs( self, amount, fixed_fee, num_outputs, domain = None ):
         """ todo: minimize tx size """
         total = 0
         fee = self.fee if fixed_fee is None else fixed_fee
@@ -1192,19 +1192,19 @@ class NewWallet:
         inputs = []
 
         for item in coins:
-            #newHeight = 0
+            newheight = 0
             if self.network.get_local_height() > self.network.set_server_height():
-                newHeight = self.network.get_local_height()
+                newheight = self.network.get_local_height()
             else:
-                newHeight = self.network.get_server_height()
-            if item.get('coinbase') and item.get('height') + COINBASE_MATURITY > newHeight:
+                newheight = self.network.get_server_height()
+            if item.get('coinbase') and item.get('height') + COINBASE_MATURITY > newheight:
                 continue
             #more for freicoin
-            if item.get('coinbase') and item.get('refheight') + COINBASE_MATURITY > newHeight:
+            if item.get('coinbase') and item.get('refheight') + COINBASE_MATURITY > newheight:
                 continue
-            if item.get('height') > newHeight + 3:
+            if item.get('height') > newheight + 3:
                 continue
-            if item.get('refheight') > newHeight + 3:
+            if item.get('refheight') > newheight + 3:
                 continue                
             addr = item.get('address')
             v = item.get('value')
