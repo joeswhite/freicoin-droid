@@ -1214,6 +1214,7 @@ class NewWallet:
 
         coins = self.get_unspent_coins(domain)
         inputs = []
+        newHeight = 0
 
         for item in coins:
             newHeight = 0
