@@ -1178,7 +1178,7 @@ class NewWallet:
         return [x[1] for x in coins]		
 
 
-    def choose_tx_inputs( self, amount, fixed_fee, num_outputs, domain = None ):
+    def choose_tx_inputs( self, amount, fixed_fee, num_outputs, domain = None, newHeight = None ):
         """ todo: minimize tx size """
         total = 0
         fee = self.fee if fixed_fee is None else fixed_fee
@@ -1192,7 +1192,7 @@ class NewWallet:
         inputs = []
 
         for item in coins:
-            newHeight = 0
+            #newHeight = 0
             if self.network.get_local_height() > self.network.set_server_height():
                 newHeight = self.network.get_local_height()
             else:
