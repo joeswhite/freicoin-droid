@@ -7,8 +7,9 @@ from blockchain import Blockchain
 DEFAULT_PORTS = {'t':'50011', 's':'50012', 'h':'9009', 'g':'9010'}
 
 DEFAULT_SERVERS = {
+        '173.255.235.7':DEFAULT_PORTS,
 	'freicoin.us':DEFAULT_PORTS,
-    '173.255.235.7':DEFAULT_PORTS,
+
 }
 
 
@@ -53,7 +54,7 @@ def filter_protocol(servers, p):
     return l
     
 
-def pick_random_server(p='s'):
+def pick_random_server(p='t'):
     return random.choice( filter_protocol(DEFAULT_SERVERS,p) )
 
 from simple_config import SimpleConfig
@@ -70,7 +71,7 @@ class Network(threading.Thread):
         self.interfaces = {}
         self.queue = Queue.Queue()
         self.callbacks = {}
-        self.protocol = self.config.get('protocol','s')
+        self.protocol = self.config.get('protocol','t')
         self.running = False
 
         # Server for addresses and transactions

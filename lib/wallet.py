@@ -1093,8 +1093,8 @@ class NewWallet:
                 if addr == address:
                     key = item['prevout_hash']  + ':%d'%item['prevout_n']
                     value = self.prevout_values.get( key )
-		    #added for demurrage accounting
-		    newValue = self.demurrage(value, item['prevout_n'])
+                    #added for demurrage accounting
+                    newValue = self.demurrage(value, item['prevout_n'])
 
                     if key in received_coins:
                         v -= newValue

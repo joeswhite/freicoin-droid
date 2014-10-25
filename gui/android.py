@@ -22,7 +22,7 @@
 from __future__ import absolute_import
 import android
 
-from electrum import SimpleConfig, Wallet, WalletStorage, format_satoshis, mnemonic_encode, mnemonic_decode, VeryOldWallet
+from electrum import SimpleConfig, Wallet, WalletStorage, format_satoshis, mnemonic_encode, mnemonic_decode
 from electrum.bitcoin import is_valid
 from electrum import util
 from decimal import Decimal
@@ -166,7 +166,7 @@ def make_layout(s, scrollable = False):
 
         <TextView
           android:id="@+id/textFreiLectrum"
-          android:text="FreiLectrum RC1"
+          android:text="FreiLectrum"
           android:textSize="7pt"
           android:textColor="#ff4444ff"
           android:gravity="left"
@@ -350,11 +350,8 @@ def get_history_values(n):
 
         conf_str = 'v' if conf else 'o'
         label, is_default_label = wallet.get_label(tx_hash)
-        #replace < and > for ease of android parsing
-        labelNoSpecial = label[1:]
-#        values.append((conf_str, '  ' + time_str, '  ' + format_satoshis(value,True), '  ' + label ))
-        values.append((conf_str, '  ' + time_str, '  ' + format_satoshis(value,True), '  ' + labelNoSpecial ))
-    #print(values)
+        values.append((conf_str, '  ' + time_str, '  ' + format_satoshis(value,True), '  ' + label ))
+
     return values
 
 
@@ -436,9 +433,8 @@ def update_layout():
 
     # vibrate if status changed
     if text != status_text:
-        #if status_text and network.is_connected() and wallet.up_to_date:
-            #turn off vibrate
-            #droid.vibrate()
+        if status_text and network.is_connected() and wallet.up_to_date:
+            droid.vibrate()
         status_text = text
 
     droid.fullSetProperty("balanceTextView", "text", status_text)
@@ -461,11 +457,9 @@ def pay_to(recipient, amount, fee, label):
     droid.dialogShow()
 
     try:
-        #updates for freicoin transaction creation
-        outputType = 'address'
-        tx = wallet.mktx([(outputType, recipient, amount)], password, fee)
+        tx = wallet.mktx( [(recipient, amount)], password, fee)
     except Exception as e:
-        modal_dialog('error', str(e.message))
+        modal_dialog('error', e.message)
         droid.dialogDismiss()
         return
 
@@ -493,7 +487,7 @@ def make_new_contact():
     if r:
         data = r['extras']['SCAN_RESULT']
         if data:
-            if re.match('^freicoin:', data):
+            if re.match('^bitcoin:', data):
                 address, _, _, _, _, _, _ = util.parse_url(data)
             elif is_valid(data):
                 address = data
@@ -564,11 +558,11 @@ def main_loop():
             elif out == "receive":
                 global receive_addr
                 receive_addr = select_from_addresses()
-                #if receive_addr:
-                #will reenable in python 2.7
-#                    amount = modal_input('Amount', 'Amount you want receive. ', '', "numberDecimal")
-#                    if amount:
-#                        receive_addr = 'freicoin:%s?amount=%s'%(receive_addr, amount)
+                if receive_addr:
+                    amount = modal_input('Amount', 'Amount you want receive. ', '', "numberDecimal")
+                    if amount:
+                        receive_addr = 'bitcoin:%s?amount=%s'%(receive_addr, amount)
+
                 if not receive_addr:
                     out = None
 
@@ -596,20 +590,16 @@ def payto_loop():
             if id=="buttonPay":
 
                 droid.fullQuery()
-                recipient = str(droid.fullQueryDetail('recipient').result.get('text'))
-                label  = droid.fullQueryDetail('label').result.get('text')
+                recipient = droid.fullQueryDetail("recipient").result.get('text')
+                label  = droid.fullQueryDetail("label").result.get('text')
                 amount = droid.fullQueryDetail('amount').result.get('text')
-               
-                
-                
+
                 if not is_valid(recipient):
-                    modal_dialog('Error','Invalid FreiCoin address')
+                    modal_dialog('Error','Invalid Bitcoin address')
                     continue
 
                 try:
                     amount = int( 100000000 * Decimal(amount) )
-                    
-                    
                 except Exception:
                     modal_dialog('Error','Invalid amount')
                     continue
@@ -628,7 +618,7 @@ def payto_loop():
                 if r:
                     data = r['extras']['SCAN_RESULT']
                     if data:
-                        if re.match('^freicoin:', data):
+                        if re.match('^bitcoin:', data):
                             payto, amount, label, _, _, _, _ = util.parse_url(data)
                             droid.fullSetProperty("recipient", "text",payto)
                             droid.fullSetProperty("amount", "text", amount)
@@ -647,7 +637,6 @@ def payto_loop():
         #elif event["name"]=="screen":
         #    if event["data"]=="destroy":
         #        out = 'main'
-
 
     return out
 
@@ -765,42 +754,6 @@ def change_password_dialog():
     else:
         modal_dialog('No password','your wallet is not encrypted')
     return True
-
-
-
-
-def new_wallet_password_dialog():
-    if oldwallet.use_encryption:
-        password  = droid.dialogGetPassword('Your wallet is encrypted').result
-        if password is None: return
-    else:
-        password = None
-
-    try:
-        oldwallet.get_seed(password)
-    except Exception:
-        modal_dialog('error','incorrect password')
-        return
-
-    new_password  = droid.dialogGetPassword('Choose a password').result
-    if new_password == None:
-        return
-
-    if new_password != '':
-        password2  = droid.dialogGetPassword('Confirm new password').result
-        if new_password != password2:
-            modal_dialog('error','passwords do not match')
-            return
-
-    oldwallet.update_password(password, new_password)
-    if new_password:
-        modal_dialog('Password updated','your wallet is encrypted')
-    else:
-        modal_dialog('No password','your wallet is not encrypted')
-    return True
-
-
-
 
 
 def settings_loop():
@@ -929,13 +882,12 @@ def make_bitmap(addr):
 droid = android.Android()
 menu_commands = ["send", "receive", "settings", "contacts", "main"]
 wallet = None
-oldwallet = None
 network = None
 
 class ElectrumGui:
 
     def __init__(self, config, _network):
-        global wallet, network,oldwallet
+        global wallet, network
         network = _network
         network.register_callback('updated', update_callback)
         network.register_callback('connected', update_callback)
@@ -948,19 +900,18 @@ class ElectrumGui:
             if not action: exit()
 
             wallet = Wallet(storage)
-            oldwallet = VeryOldWallet(storage)
             if action == 'create':
-                oldwallet.init_seed(None)
+                wallet.init_seed(None)
                 self.show_seed()
-                oldwallet.save_seed(None)
-                oldwallet.synchronize()  # generate first addresses offline
+                wallet.save_seed(None)
+                wallet.synchronize()  # generate first addresses offline
                 
             elif action == 'restore':
                 seed = self.seed_dialog()
                 if not seed:
                     exit()
-                oldwallet.init_seed(str(seed))
-                oldwallet.save_seed(None)
+                wallet.init_seed(str(seed))
+                wallet.save_seed(None)
             else:
                 exit()
 
@@ -970,14 +921,10 @@ class ElectrumGui:
                 if not self.restore_wallet():
                     exit()
 
-            self.new_password_dialog()
+            self.password_dialog()
 
         else:
             wallet = Wallet(storage)
-
-            oldwallet = VeryOldWallet(storage)
-
-
             wallet.start_threads(network)
 
 
@@ -1051,12 +998,9 @@ class ElectrumGui:
 
         
     def show_seed(self):
-        modal_dialog('Your seed is:', oldwallet.seed)
-        modal_dialog('Mnemonic code:', ' '.join(mnemonic_encode(oldwallet.seed)) )
+        modal_dialog('Your seed is:', wallet.seed)
+        modal_dialog('Mnemonic code:', ' '.join(mnemonic_encode(wallet.seed)) )
 
-
-    def new_password_dialog(self):
-        new_wallet_password_dialog()
 
     def password_dialog(self):
         change_password_dialog()
