@@ -1435,6 +1435,13 @@ class NewWallet:
         for item in coins:
             if item.get('coinbase') and item.get('height') + COINBASE_MATURITY > self.network.get_local_height():
                 continue
+            #more for freicoin
+            if item.get('coinbase') and item.get('refheight') + COINBASE_MATURITY > newHeight:
+                continue
+            if item.get('height') > newHeight + 3:
+                continue
+            if item.get('refheight') > newHeight + 3:
+                continue   
             v = item.get('value')
             total += v
             #pprint(item)
