@@ -165,8 +165,8 @@ def make_layout(s, scrollable = False):
         android:background="#ff222222">
 
         <TextView
-          android:id="@+id/textFreiLectrum BETA2"
-          android:text="FreiLectrum"
+          android:id="@+id/textFreiLectrum"
+          android:text="FreiLectrum BETA2"
           android:textSize="7pt"
           android:textColor="#ff4444ff"
           android:gravity="left"
