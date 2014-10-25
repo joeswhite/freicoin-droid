@@ -1193,7 +1193,7 @@ class NewWallet:
 
         for item in coins:
             newheight = 0
-            if self.network.get_local_height() > self.network.set_server_height():
+            if self.network.get_local_height() > self.network.get_server_height():
                 newheight = self.network.get_local_height()
             else:
                 newheight = self.network.get_server_height()
