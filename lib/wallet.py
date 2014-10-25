@@ -1440,14 +1440,19 @@ class NewWallet:
         tx = Transaction(inputs, outputs)
         #print(tx)
         for item in coins:
-            if item.get('coinbase') and item.get('height') + COINBASE_MATURITY > self.network.get_local_height():
+            newheight = 0
+            if self.network.get_local_height() > self.network.set_server_height():
+                newheight = self.network.get_local_height()
+            else:
+                newheight = self.network.get_server_height()
+            if item.get('coinbase') and item.get('height') + COINBASE_MATURITY > newheight:
                 continue
             #more for freicoin
-            if item.get('coinbase') and item.get('refheight') + COINBASE_MATURITY > newHeight:
+            if item.get('coinbase') and item.get('refheight') + COINBASE_MATURITY > newheight:
                 continue
-            if item.get('height') > newHeight + 3:
+            if item.get('height') > newheight + 3:
                 continue
-            if item.get('refheight') > newHeight + 3:
+            if item.get('refheight') > newheight + 3:
                 continue   
             v = item.get('value')
             total += v
