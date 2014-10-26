@@ -1157,7 +1157,7 @@ class NewWallet:
                 for i, (address, value) in enumerate(tx.outputs):
 
 		    #add demurrage accounting functions
-		    inputHeight = i
+		    inputHeight = tx_height
     		    newValue = int(self.demurrage(value, inputHeight))
 		    #update for demurrage accounting
                     output = {'address':address, 'value':newValue, 'prevout_n':i}
