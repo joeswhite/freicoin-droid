@@ -1070,7 +1070,7 @@ class NewWallet:
                     key = item['prevout_hash']  + ':%d'%item['prevout_n']
                     value = self.prevout_values.get( key )
 		    #added for demurrage accounting
-		    newValue = self.demurrage(value, item['prevout_n'])
+		    newValue = self.demurrage(value, inputHeight)
 
                     if key in received_coins:
                         v -= newValue
@@ -1157,7 +1157,7 @@ class NewWallet:
                 for i, (address, value) in enumerate(tx.outputs):
 
 		    #add demurrage accounting functions
-		    inputHeight = i
+		    inputHeight = tx_height
     		    newValue = int(self.demurrage(value, inputHeight))
 		    #update for demurrage accounting
                     output = {'address':address, 'value':newValue, 'prevout_n':i}
