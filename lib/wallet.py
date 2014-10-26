@@ -240,58 +240,51 @@ class NewWallet:
     #function may be a bit excessive in length, but this was rolled out
     #at a rapid pace. optimizations will come later
     def demurrage(self, oldValue, inputHeight):
-	#variables that need to be set
-	#this will be the value after demurrage
-        self.newValue = 0
-	#this will be the highest blockchain_headers (either you or the server)
-	self.currentHeight = 0
-	#the wallets blockchain_headers height
-	self.localHeight = self.network.get_local_height() + 1 #may need to be + 1
-	#the server's blockchain_headers height
-	self.serverHeight = self.network.get_server_height() + 1
-
-	#bring it to 121 decimal places for freicoin demurrage precision
-	#oldValue = oldValue * (10 ** 121)
-	#round back down so we can get the tx to a better state
-	#oldValue = round(oldValue, 8)
+    #variables that need to be set
+    #this will be the value after demurrage
+        newValue = 0
+    #bring it to 121 decimal places for freicoin demurrage precision
+    #oldValue = oldValue * (10 ** 121)
+    #round back down so we can get the tx to a better state
+    #oldValue = round(oldValue, 8)
 
         #checks for the longest chain report to give most accurate and rapid demurrage reading
-	#checks to see who has the longest blockchain_headers, our local wallet, or the server
-	if (self.localHeight >= self.serverHeight):
-		#we have the longest blockchain_headers on our local wallet, we will use that
-		#this is the highest blockchain_headers block count, we have the longest chain
-		currentHeight = self.localHeight
-	#otherwise, we can assume that the server has the longest blockchain_headers, we will use that
-	else:
-		#set the current height, the server has the highest blockchain_headers block count,
-		#they have the longest height. We will use their blockheight for demurrage.
-		#this will allow the user to have no worries that their funds will go "poof"
-		#once their wallet updates to the latest block. It would be embarassing to be
-		#1-2 coins off from a purchase because you didn't get demurrage fee updates in time
-		currentHeight = self.serverHeight
+        #checks to see who has the longest blockchain_headers, our local wallet, or the server
+        if (self.localHeight >= self.serverHeight):
+        #we have the longest blockchain_headers on our local wallet, we will use that
+        #this is the highest blockchain_headers block count, we have the longest chain
+            currentHeight = self.localHeight
+        #otherwise, we can assume that the server has the longest blockchain_headers, we will use that
+        else:
+        #set the current height, the server has the highest blockchain_headers block count,
+        #they have the longest height. We will use their blockheight for demurrage.
+        #this will allow the user to have no worries that their funds will go "poof"
+        #once their wallet updates to the latest block. It would be embarassing to be
+        #1-2 coins off from a purchase because you didn't get demurrage fee updates in time
+            currentHeight = self.serverHeight
 
         #makes sure we aren't going in reverse and adding coins
-	if (currentHeight > inputHeight):
-		#the actual demurrage function
-		#reference:  described by https://github.com/freicoin/freicoin-old/wiki/How-to-properly-handle-demurrage-in-applications
-		#$new_value = $old_value * (1 - 2**-20)**($new_height - $old_height)
-		newValueInKria = oldValue * (1 - 2 **-20)**(currentHeight - inputHeight)
+        if (currentHeight > inputHeight):
+        #the actual demurrage function
+        #reference:  described by https://github.com/freicoin/freicoin-old/wiki/How-to-properly-handle-demurrage-in-applications
+        #$new_value = $old_value * (1 - 2**-20)**($new_height - $old_height)
+            newValueInKria = oldValue * (1 - 2 **-20)**(currentHeight - inputHeight)
 
-		#the value insub- Kria (or satoshi)
-		newValue = newValueInKria # / 100000000
+        #the value insub- Kria (or satoshi)
+            newValue = newValueInKria # / 100000000
 
-		#the value rounded to kria (satoshi)
-		newValue = int(math.floor(newValue))
+        #the value rounded to kria (satoshi)
+            newValue = int(math.floor(newValue))
 
-		#debug info for for me
-		#print(str(oldValue) + "/" + str(newValue) + "-" + str(inputHeight) + "/" + str(currentHeight))
+        #debug info for for me
+            print(str(oldValue) + "/" + str(newValue) + "-" + str(inputHeight) + "/" + str(currentHeight))
 
-		#return the new value of the coins post demurrage
-		return newValue
-	else:
+        #return the new value of the coins post demurrage
+            value = newValue
+        else:
+            value = oldValue
 
-                return oldValue
-
+        return value
 		#return the old value of the coins as there is a problem or it is the first block
 		#this is so we don't make them have coins ADDED to their balance when going in reverse!
 		#while fun, it's not a good idea to do that kinda thing on a production item.
