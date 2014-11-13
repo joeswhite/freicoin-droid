@@ -564,7 +564,7 @@ def main_loop():
             elif out == "receive":
                 global receive_addr
                 receive_addr = select_from_addresses()
-                if receive_addr:
+                #if receive_addr:
                     #amount = modal_input('Amount', 'Amount you want receive. ', '', "numberDecimal")
                     #if amount:
                         #receive_addr = 'freicoin:%s?amount=%s'%(receive_addr, amount)
