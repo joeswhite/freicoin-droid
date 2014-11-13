@@ -268,7 +268,7 @@ class NewWallet:
         if (self.localHeight >= self.serverHeight):
         #we have the longest blockchain_headers on our local wallet, we will use that
         #this is the highest blockchain_headers block count, we have the longest chain
-            currentHeight = self.localHeight
+            currentHeight = self.localHeight + 1
         #otherwise, we can assume that the server has the longest blockchain_headers, we will use that
         else:
         #set the current height, the server has the highest blockchain_headers block count,
@@ -276,7 +276,7 @@ class NewWallet:
         #this will allow the user to have no worries that their funds will go "poof"
         #once their wallet updates to the latest block. It would be embarassing to be
         #1-2 coins off from a purchase because you didn't get demurrage fee updates in time
-            currentHeight = self.serverHeight
+            currentHeight = self.serverHeight + 1
 
         #makes sure we aren't going in reverse and adding coins
         if (currentHeight > inputHeight):
