@@ -1423,7 +1423,6 @@ class NewWallet:
                 return False
         return True
         
-        
     def make_unsigned_transaction(self, outputs, fixed_fee=None, change_addr=None, domain=None, coins=None ):
         # check outputs
         #[(outputType, recipient, amount)]
@@ -1442,6 +1441,11 @@ class NewWallet:
                 if i in domain: domain.remove(i)
             coins = self.get_unspent_coins(domain)
 
+        #freicoin demurrage accounting set variables 
+        inputHeight = 0
+        demurragedValue = 0
+        demurragedTotal = 0
+        
         amount = sum( map(lambda x:x[2], outputs) )
         total = fee = 0
         inputs = []
@@ -1463,16 +1467,23 @@ class NewWallet:
             if item.get('refheight') > newheight + 3:
                 continue   
             v = item.get('value')
+            #add demurrage accounting here
+            inputHeight = item.get('refheight')
+            demurragedValue =  demurrage(v, inputHeight)
+            demurragedTotal += demurragedValue
             total += v
-            #pprint(item)
-            #print('||||||||||||||||||||')
+
+            print('||||||||||||||||||||')
+            pprint(demurragedValue)
+            pprint(demurragedTotal)
+            print('||||||||||||||||||||')
             self.add_input_info(item)
             #print('--------debug unsigtx********')
             tx.add_input(item)
             fee = fixed_fee if fixed_fee is not None else self.estimated_fee(tx)
-            if total >= amount + fee: break
+            if demurragedTotal >= amount + fee: break
         else:
-            print_error("Not enough funds", total, amount, fee)
+            print_error("Not enough funds", demurragedTotal, amount, fee)
             return None
 
         # change address
@@ -1489,7 +1500,11 @@ class NewWallet:
                 change_addr = self.accounts[account].get_addresses(1)[-self.gap_limit_for_change]
 
         # if change is above dust threshold, add a change output.
-        change_amount = total - ( amount + fee )
+        #this is where we calculate proper change for demurraged output
+
+#        change_amount = total - ( amount + fee )
+        change_amount = demurragedTotal - ( amount + fee )
+
         if fixed_fee is not None and change_amount > 0:
             # Insert the change output at a random position in the outputs
             posn = random.randint(0, len(tx.outputs))
@@ -1514,7 +1529,6 @@ class NewWallet:
         pprint(tx)
         run_hook('make_unsigned_transaction', tx)
         return tx
-        
         
         
         
