@@ -1423,6 +1423,7 @@ class NewWallet:
                 return False
         return True
         
+        
     def make_unsigned_transaction(self, outputs, fixed_fee=None, change_addr=None, domain=None, coins=None ):
         # check outputs
         #[(outputType, recipient, amount)]
@@ -1468,8 +1469,8 @@ class NewWallet:
                 continue   
             v = item.get('value')
             #add demurrage accounting here
-            inputHeight = item.get('refheight')
-            demurragedValue =  demurrage(v, inputHeight)
+            inputHeight = item.get('height')
+            demurragedValue =  self.demurrage(v, inputHeight)
             demurragedTotal += demurragedValue
             total += v
 
@@ -1529,6 +1530,7 @@ class NewWallet:
         pprint(tx)
         run_hook('make_unsigned_transaction', tx)
         return tx
+        
         
         
         
